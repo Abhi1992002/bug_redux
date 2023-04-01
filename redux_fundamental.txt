@@ -1,0 +1,1758 @@
+// Redux Architecture
+
+we can store array , object , boolean , var , anyting in he redux but we can't change it because it is based on functional programming
+
+to mutate we take a function called reducer which take store as an argument , use a spread operator to take copy of store argument or use immutabilty library
+
+reducer take current state of the store and return the updated store
+
+in reduces , we give action as an second argument because of type of action , we know what reducer have to update
+
+there is a reducer for each slice of store
+
+action is a plain javascript object which tells reducer what to update , it is like an event , when we change something , it goes to store and say i have change something and then store call reducer to handle this event
+
+every action of user has same entrance point to store , so we can place log at entrance so we know everything what user is doing
+
+// first redux apps
+
+steps we need to follow to use redux
+
+1.) design the store
+2.) define the action
+3,) create the users
+4.) set up the user
+
+=> npm i redux
+
+we are creating a bug tracking application
+
+1.) design store
+
+our store have 2 slices => bugs , current user
+ => bugs need to have an array of object , properties => id , description , resolved(de)
+
+ eg : {
+    bugs:[{
+     id:1,
+     description:"",
+     resolved:false
+    },
+    {
+      id:2,
+     description:"",
+     resolved:false
+    }],
+    current_user = {}
+ }
+
+ => current user is a empty object
+
+ 2.) define the action
+
+ what can they do
+ => can add a bug
+ => mark as resolved
+ => delete a bug
+ we are focusing only on this , redux only want type property in you action
+eg: 
+ {
+    type:"BUGADDED",
+    payload:{
+        description:"",
+        id:1
+    }
+ }
+
+ 3.) creating a reducer
+
+ let loadid = 0;
+
+
+// when we start our app reducer return us an empty store
+export default function reducer(state = [] , action){
+
+    // Switch way to do it
+    // switch(action.type){
+    //     case "BUGADDED":
+    //         return [
+    //             ...state,
+    //             {
+    //               id:++loadid,
+    //              description: action.payload.description,
+    //              resolved:false
+    //             }
+    //          ];
+    //     case  "BUGREMOVED":
+    //         return state.filter(bug => bug.id !== action.payload.id)
+    
+    //     default :
+    //      return state;  
+    //     }
+
+//    if and else way
+
+    if(action.type === "BUGADDED")
+    return [
+       ...state,
+       {
+         id:++loadid,
+        description: action.payload.description,
+        resolved:false
+       }
+    ]
+    else if(action.type === "BUGREMOVED")
+    return state.filter(bug => bug.id !== action.payload.id)
+
+//else
+    return state
+}
+
+
+4.) Creating a store
+
+// index.js
+
+1.) npm i @reduxjs/toolkit
+
+import { configureStore } from '@reduxjs/toolkit'
+import reducer from "./reducer.js"
+
+const store = configureStore({reducer: reducer})
+
+export default store;
+
+// we got something like {dispatch: ƒ, subscribe: ƒ, getState: ƒ, replaceReducer: ƒ, @@observable: ƒ}
+
+// these property are important  => when you subscribe to the store , we got notification everytime the state of the store changes
+
+// intersting things is that we do not have method to set state of store so to change state , we have to dispatch an action
+
+//get state to see current state
+
+// index.js (store)
+import * as actions from "./actionTypes"
+import { bugAdded } from "./actions";
+import store from "./store";
+
+// Subscribing to the store => evertime state change function inside it runs
+// this method reurns a function means write it after the code where you want quit notification getting
+const unsubscribe = store.subscribe(()=>{
+    console.log("Store Changed",store.getState())
+})
+
+// changing state by dispatching action
+// here we have type hardcoded , suppose if in future we change it to something else , so to solve this problem we crate a new file name actionTypes.js
+
+//suppose if we get lots of bug so we have to add dispatch for bug added many times and need to write all these action many times so to solve this we create a new file name actions.js
+
+store.dispatch({
+    type: actions.BUG_ADDED,
+    payload:{
+        description:"Bug1"
+    }
+})
+
+store.dispatch(bugAdded("Bug2"))
+
+unsubscribe(); // after this no notifiction of state change
+
+store.dispatch({
+    type: actions.BUG_REMOVED,
+    payload:{
+        id:1
+    }
+})
+
+console.log(store.getState())
+
+//actions.js
+import * as actions from "./actionTypes"
+
+export function bugAdded(description){
+    return {
+        type: actions.BUG_ADDED,
+    payload:{
+        description:"Bug1"
+    } 
+    }
+}
+
+//actionTypes.js
+export const BUG_ADDED = "bugAdded"
+export const BUG_REMOVED = "bugRemoved"
+
+// After finishing code looks like that
+
+//actions.js
+
+import * as actions from "./actionTypes"
+
+export function bugAdded(description){
+    return {
+        type: actions.BUG_ADDED,
+    payload:{
+        description: description
+    } 
+    }
+}
+export function bugResolved(id){
+    return {
+        type: actions.BUG_RESOLVED,
+        payload:{
+           id:id
+        } 
+    }
+}
+
+//actionTypes.js
+
+export const BUG_ADDED = "bugAdded"
+export const BUG_REMOVED = "bugRemoved"
+export const BUG_RESOLVED = "bugResolved"
+
+//store.js
+
+
+import { configureStore } from '@reduxjs/toolkit'
+import reducer from "./reducer.js"
+
+const store = configureStore({reducer: reducer})
+
+export default store;
+
+//index.js
+
+import * as actions from "./actionTypes"
+import { bugAdded , bugResolved } from "./actions";
+import store from "./store";
+
+// Subscribing to the store => evertime state change function inside it runs
+// this method reurns a function means write it after the code where you want quit notification getting
+const unsubscribe = store.subscribe(()=>{
+    console.log("Store Changed",store.getState())
+})
+
+// changing state by dispatching action
+// here we have type hardcoded , suppose if in future we change it to something else , so to solve this problem we crate a new file name actionTypes.js
+
+//suppose if we get lots of bug so we have to add dispatch for bug added many times and need to write all these action many times so to solve this we create a new file name actions.js
+
+store.dispatch({
+    type: actions.BUG_ADDED,
+    payload:{
+        description:"Bug1"
+    }
+})
+
+store.dispatch(bugAdded("Bug2"))
+
+store.dispatch(bugResolved(2))
+
+unsubscribe(); // after this no notifiction of state change
+
+store.dispatch({
+    type: actions.BUG_REMOVED,
+    payload:{
+        id:1
+    }
+})
+
+console.log(store.getState())
+
+//reducer.js
+
+import * as actions from "./actionTypes"
+// means import everything as actions
+
+let loadid = 0;
+
+
+// when we start our app reducer return us an empty store
+export default function reducer(state = [] , action){
+
+    // Switch way to do it
+    // switch(action.type){
+    //     case "BUGADDED":
+    //         return [
+    //             ...state,
+    //             {
+    //               id:++loadid,
+    //              description: action.payload.description,
+    //              resolved:false
+    //             }
+    //          ];
+    //     case  "BUGREMOVED":
+    //         return state.filter(bug => bug.id !== action.payload.id)
+    
+    //     default :
+    //      return state;  
+    //     }
+
+//    if and else way
+
+    if(action.type === actions.BUG_ADDED)
+    return [
+       ...state,
+       {
+         id:++loadid,
+        description: action.payload.description,
+        resolved:false
+       }
+    ]
+    else if(action.type === actions.BUG_REMOVED)
+    return state.filter(bug => bug.id !== action.payload.id)
+
+    else if(action.type === actions.BUG_RESOLVED)
+     return state.map(bug => bug.id !== action.payload.id ? bug : {...bug , resolved:true})
+
+//else
+    return state
+}
+
+/////////// Building store from scratch
+
+// we create store from scratch
+
+// we create a createStore function like a store function
+
+// previously we send createStore a reducer
+function createStore(reducer){
+    var state;
+    // store initial current internal state
+    // we we paas store directly in return , then anyone can change it directly , hence we paas it in getState
+    // we made state a private property here because we are not directly exposing it
+
+    var listners = [];
+    
+    function getState(){
+       return state; 
+    }
+
+    // when we do store.subscribe and send a call back function => i get that call back function as listner and i add it into listners array and whenecer someone dispactch some action it call those function inside listners array
+    function subscribe(listner){
+      // when we subscribe , we send our listner to listners array
+      listners.push(listner);
+    }
+
+    function dispatch(action){
+        // Call reducer to get the new state
+        // here we are not adding validatatio to check type property in action
+          state =  reducer(state,action)
+        //Notify the subscriber if user is subscribed
+         for(var i = 0; i < listners.length; i++){
+              listners[i]();
+         }
+    }
+
+    
+
+return{
+    subscribe,
+   getState,
+   dispatch
+}
+}
+
+export default createStore();
+
+// Devtools
+//INspectore
+=>if you check Action => there is a mistake then go to actionCreator then correct it  
+=> if you check state/diff =>  if not updated correctly then check reducers
+
+
+Writing Clean Redux Code
+
+1.) structuring file and folder structure
+
+inside src , make a folder named store 
+and inside store folder we create different folders for different features and for each of these folders we create 3 files (action.js , actionTypes.js , reducer.js) , this become more complex , thats why we use duck pattern , 
+
+in this we create files in store folder directly , and do not need different file like action.js , reducre.js => we do all these stuffs in one file 
+
+//Implementing duck pattern in our project
+
+=> when you apply duck pattern you need to add export default to reducer function
+
+=> need only to export actionCreators
+
+=> and not need to export actionTyoes
+
+// Action Types
+
+ const BUG_ADDED = "bugAdded"
+ const BUG_REMOVED = "bugRemoved"
+ const BUG_RESOLVED = "bugResolved"
+
+// actions creaters
+
+export function bugAdded(description){
+    return {
+        type: BUG_ADDED,
+    payload:{
+        description: description
+    } 
+    }
+}
+export function bugResolved(id){
+    return {
+        type: BUG_RESOLVED,
+        payload:{
+           id:id
+        } 
+    }
+}
+
+// Reducer 
+
+let loadid = 0;
+export default function reducer(state = [] , action){
+
+    // Switch way to do it
+    switch(action.type){
+        case "BUGADDED":
+            return [
+                ...state,
+                {
+                  id:++loadid,
+                 description: action.payload.description,
+                 resolved:false
+                }
+             ];
+        case  "BUGREMOVED":
+            return state.filter(bug => bug.id !== action.payload.id)
+    
+        default :
+         return state;  
+        }
+}
+
+changed store file name to configureStore
+
+>configureStore.js
+
+
+import { configureStore } from "@reduxjs/toolkit"
+import reducer from "./bugs"
+
+
+export default function createStore(){
+const store = configureStore({reducer:reducer})
+return store;
+};
+
+>index.js
+
+import configureStore from "./store/conigureStore"
+import * as actions from "./store/bugs"
+
+const store = configureStore()
+
+store.subscribe(()=>{
+    console.log("Subscribed")
+})
+
+store.dispatch(actions.bugAdded("bug 1"))
+store.dispatch(actions.bugAdded("bug 2"))
+store.dispatch(actions.bugAdded("bug 3"))
+store.dispatch(actions.bugAdded("bug 4"))
+store.dispatch(actions.bugAdded("bug 5"))
+
+
+store.dispatch(actions.bugResolved(1))
+store.dispatch(actions.bugResolved(5))
+
+// redux toolkit => npm i @reduxjs/toolkit
+
+redux toolkit provides a bunch of utility functions for simplifying our redux code
+
+one of the function is to creating a store
+
+we have use configureStore function already in our store file
+
+>bug.js
+
+import { createAction } from "@reduxjs/toolkit"
+
+// Action Types
+
+export const BUG_ADDED = createAction("bugAdded")
+export const BUG_REMOVED = createAction("bugRemoved")
+export const BUG_RESOLVED =createAction( "bugResolved")
+export const bugUpdated = createAction("bugUpdate");
+// created a new action and actionTypes using createAction function which takes actionType , here actionType is  bugUpdate
+
+// bugUpdated is a function here which takes object as an argument and add this to payload of action
+console.log(bugUpdated({id:1}))
+// Reducer 
+let loadid = 0;
+export default function reducer(state = [] , action){
+
+    // Switch way to do it
+    switch(action.type){
+        case BUG_ADDED.type:
+            return [
+                ...state,
+                {
+                  id:++loadid,
+                 description: action.payload.description,
+                 resolved:false
+                }
+             ];
+        case  BUG_REMOVED.type:
+            return state.filter(bug => bug.id !== action.payload.id)
+    
+        default :
+         return state;  
+        }
+}
+
+>bug.js
+
+// we use ccreateReducer to make reducer , first parameter is initial state and second parameter is an object having key value pair as actions and its function
+
+something like actions : function(event => event handlr)
+
+example => 
+
+
+export default createReducer([] , {
+    // key: value
+    // we write it in a mutable way because createReducer use emmer function thats why it converts mutable code into immutable so not to be worry
+    // can use [BugAdded.type] as well as bugResolved , but first one give more priority
+
+    [BugAdded.type] : (bugs , action) => {
+        bugs.push(
+            {
+                id:++loadid,
+               description: action.payload.description,
+               resolved:false
+              }
+        )
+    },
+    bugRemoved : (bugs , action) => {
+      
+    },
+    [bugResolved.type] : (bugs , action) => {
+        const index = bugs.findIndex(bug => bug.id === action.payload.id)
+        bugs[index].resolved = true 
+    }
+})
+
+
+///////  createSlice    //////////
+
+import {createSlice } from "@reduxjs/toolkit"
+
+//Slice
+let loadid = 0;
+const slice = createSlice({
+    name : "bugs",
+    initialState : [],
+    reducers:{
+        //actions => action handlers
+        //here we do not need to create a reducers , action type , we done it using only createSlice only 
+        //internally createslice calls 2 function => one is createAction and second is createReducer
+
+        bugAdded : (bugs , action) => {
+            bugs.push(
+                {
+                    id:++loadid,
+                   description: action.payload.description,
+                   resolved:false
+                  }
+            )
+        },
+            bugResolved : (bugs , action) => {
+            const index = bugs.findIndex(bug => bug.id === action.payload.id)
+            bugs[index].resolved = true 
+        }
+    }
+})
+
+console.log(slice)
+
+export const {bugAdded , bugResolved} = slice.actions;
+export default slice.reducer
+
+
+<------------------- Designing the store -------------------------->
+
+1.) Redux State vs Local State 
+
+for local state , we can use context api => which is easy to Implement
+
+for redux state , we can unified data access ( we get power of redux)
+
+// more state push to redux , more we get out of redux
+
+=> tip is to store all state in redux except form state => bcause it has temporary values , too many dispatches , harder debugging , hence store form data locally
+
+=> Structuring a redux store 
+
+you can store state as array of object and also object of object  => second one is good because we can store each state with an state id
+
+but not always use object 
+
+=> if you need fast lookups => use an object
+=> if you need order data => use an array
+
+suppose we use order => ans each slice have an array of object , 
+
+now we have 3 array (slice) => store them into object named entities as object of array , now you can make different keys like entities eg => ui( a specific page or component detail  ) , auth(current user detail)
+
+=> Combining reducers
+
+1.) create a new file reducer.js
+
+>reducer.js 
+
+import { combineReducers } from "redux";
+import bugReduer from "./bugs"
+import projectReducer from "./project"
+
+// we have 2 slices bugs and projects
+export default combineReducers({
+    bugs: bugReduer,
+    projects : projectReducer
+})
+
+>configureStore.js 
+
+
+import { configureStore } from "@reduxjs/toolkit"
+import reducer from "./reducer"
+
+
+export default function createStore(){
+const store = configureStore({reducer:reducer})
+return store;
+};
+
+// we need to add our 2 slices into a object called entities
+
+> create entities.js
+
+-> copy paste everything from reducer.js 
+
+>reducer.js
+
+import { combineReducers } from "redux";
+import entitiesReducer from "./entities"
+
+export default combineReducers({
+    entites : entitiesReducer
+})
+
+=> Normalization
+
+it is also an important principal to design a redux store ,  some time we have duplicate data => so to get rid off this we use normalizr (paularmstrong/normalizr) => use it when use external API
+
+
+=> Selectors 
+
+we need to check how many bugs are unresolved
+
+>index,js
+
+const unresolvedBugs = store.getState().entites.bugs.filter(bug => !bug.resolved)
+
+console.log(unresolvedBugs)
+
+=> this is a wrong practise , we need to do it using bug slice
+
+>bug.js
+
+// selector function => it is a function that takes a state and returns computed state
+export const getunresolvedBugs = state => state.entities.bugs.filter(bug => !bug.resolved)
+
+=> Memoizing selectors with reselect
+
+what is memoization
+
+f(x) => returns y => it is avery expensive function so we add input and output in cache and whenever we give this input to that function we do not need to do all computation we use cache to get output 
+
+=> there is a problem with selector function that it return a new array every time we call this selector and it is a bit expensive
+
+so what we do
+
+// bugs list (not changed) => get bugs list from cache
+
+for this we use a library called reselect
+
+import {createSelector} from 'reselect'
+
+export const getunresolvedBugs =  createSelector(
+    state => state.entites.bugs,
+    
+ // it take state and return bugs , and output of this function passed to result function(bugs)
+
+    bugs => bugs.filter(bug => !bug.resolved)
+    
+ //and from all those bugs we take out bugs who are unresolved , suppose if this result not change , result function do not do this again , result function give us list form cache
+)
+
+//Middleware
+
+=> a buiding bloack that allow us to run side effects such as calling API's
+
+=> every time action comes through a same entrance pipeline so we add some function there , so when a new actions came , these function run 
+
+=> piece of code that execute after an action is dispatched and before it reaches the route
+
+middleware we can apply 
+-> calling APIs
+-> Error reporting
+-> Analytics
+-> Authorization
+
+//Creating a middleware 
+in store create new folder middleware
+
+=> action => action which is dispatches 
+=> next => reference to next middlware or reducer(if no next middleware)
+=> we use currying in this
+    
+=> Add this in configure store
+
+const logger = store => next => action =>{
+// S.N.A
+ console.log("store", store)
+ console.log("next", next)
+ console.log("action", action)
+ next(action)
+}
+
+export default logger;
+
+////configure.js
+
+import { configureStore } from "@reduxjs/toolkit";
+import reducer from "./reducer";
+import logger from "./middleware/logger";
+
+export default function createStore() {
+  const store = configureStore({ 
+    reducer: reducer ,
+    middleware:[logger]
+});
+  return store;
+}
+
+
+// Parameterized middleware
+
+=> suppose in logger middleware , we want to log differently in production and differently in developement mode
+
+// so i can tell logger by sending some parameter , so how to send a parameter
+
+>logger.js
+
+ const logger = param => store => next => action =>{
+
+ console.log("logging", param)
+next(action)
+
+}
+
+>configurestore.js
+
+ middleware:[logger({destination:"logger"})]
+
+
+// Dispatching functions 
+
+we can only dispatch a object , but how to displatch a function?
+
+but question why would we need to dispatch afunction?
+
+because sometime we need to add some logic in our dispatch
+
+store.dispactch(()=>{
+
+  // call an api
+  //promise => resolved => displatch() something
+  //promise => reject => dispatch() something else
+
+})
+
+// we can give this ability by writing a middleware function
+
+> create => middleware > func.js 
+
+>func.js 
+
+const func = store => next => action => {
+
+    //if action is function then call it otherwise go to next middleare or reducer
+    if(typeof action === 'function') action()
+    else next(action)
+    
+}
+
+export default func
+
+>configure.store
+
+middleware:[logger({destination:"logger"}) , func]
+
+>index.js 
+
+store.dispatch(()=>{
+     
+    state.dispatch({type:'bugRecieved',bugs:[1,2,3]})
+    console.log(getState)
+
+})
+
+> here is a probllem sometime in actionCreator we do not have access to the store , so we want that middleare give  us access to it 
+
+>func.js (store destructred and pass to action)
+
+const func = ({dispatch , getState}) => next => action => {
+
+    if(typeof action === 'function') action(dispatch , getState)
+    else next(action)
+    
+}
+
+export default func
+
+>index,js
+
+store.dispatch((dispatch , getState)=>{
+    dispatch({type:'bugRecieved',bugs:[1,2,3]})
+    console.log(getState)
+})
+
+// we do not need to make func middleware , because it is built in redux named as thunk 
+
+> configure.store
+
+import { configureStore , getDefaultMiddleware } from "@reduxjs/toolkit";
+
+  middleware:[
+      ...getDefaultMiddleware(),
+      logger({destination:"logger"})
+    ]
+
+
+/// Calling API's 
+
+//backend setup
+> got a backend having rest api on 9001 port , so i consumne this api
+
+//the approach
+
+with thunk middleare , we use action Creator to call api
+
+what we do 
+
+//it is just example of what we need to handle with api middleware
+const action = {
+    type : "apiCallBegan",
+    payload:{
+        url:"/bugs",
+        method:"get",
+        data:{},
+        onSuccess : 'bugRecieved',
+        onError : ' 'apiRequestFailed',
+    }
+}
+
+//api middleware
+
+> middleare > api.js
+
+
+import axios from 'axios'
+
+
+const api = ({dispatch , getState}) => next => async action => {
+    
+    if(action.type !== 'apiCallBegan') return next(action) 
+    
+     //when i call api , i dispatch an action , so what happen is that a new action dispatch and i swallow my "apiCallBegan" action , so we need to padd apiCallBegan action to action that dispatch after callig api
+
+    next(action)
+
+
+    // i am using axios to call api , firstly install it using npm i axios
+
+    const {url , method , data , onSuccess , onError} = action.payload
+    
+    try {
+        const response =  await axios.request({
+            baseURL: 'http://localhost:9001/api',
+            url,
+            method,
+            data
+        })
+        // it return a promise 
+        
+        dispatch({type : onSuccess , payload : response.data})
+        
+    } catch (error) {
+        
+        dispatch({type : onError , payload : error})
+    
+    }
+
+}
+
+export default api
+
+
+> configureStore
+
+ middleware:[
+      ...getDefaultMiddleware(),
+      logger({destination:"logger"}),
+      api
+    ]
+
+>index.js
+
+store.dispatch({
+    type : "apiCallBegan",
+    payload:{
+        url:"/bugs",
+        onSuccess : 'bugRecieved',
+        onError : 'apiRequestFailed'
+}})
+
+//there is a problem here that i have used hard coded name like apiCallBegan , we need to make create action for this so we create a file name api.js in store
+
+>api.js (store)
+
+import { createAction } from "@reduxjs/toolkit";
+
+export const apiCallBegan = createAction("api/CallBegan")
+export const apiCallSuccess = createAction("api/CallSuccess")
+export const apiCallFailed = createAction("api/CallFailed")
+
+>api.js (middleare)
+
+import axios from 'axios'
+import * as actions from "../api"
+
+const api = ({dispatch , getState}) => next => async action => {
+    
+    if(action.type !== actions.apiCallBegan.type) return next
+
+    ..........
+
+>api.js (index.js)
+
+import * as actions from "./store/api"
+
+//Restructuring the store
+
+const slice = createSlice({
+    name : "bugs",
+    //you can give empty array but this method is good for some scenario
+    initialState : {
+         list:[],
+         loading:false, //when user taking data for server , we make it true and show loading on ui
+         lastFetch : null , //timestamp of the last item we call server to get the list of books , it is important for caching , suppose we call server 10sec before so now we do not need to call it again
+
+    },
+
+    .......
+    ...
+
+    //changing bugs to bugs.list
+
+      bugAdded : (bugs , action) => {
+            bugs.list.push(
+                {
+                    id:++loadid,
+                   description: action.payload.description,
+                   resolved:false
+                  }
+            )
+        },
+            bugResolved : (bugs , action) => {
+            const index = bugs.list.findIndex(bug => bug.id === action.payload.id)
+            bugs[index].resolved = true 
+        },
+
+        bugAssignedToUser : (bugs , action) => {
+            //we have 2 things an id of and id of user
+            const {bugId , userId } = action.payload
+
+            const index = bugs.list.findIndex(bug => bug.id === bugId)
+
+            bugs.list[index].userId = userId;
+        }
+
+    }
+})
+
+//Getting data from server
+
+add bugRecieved in reducer
+
+  bugRecieved:(bugs,action)=>{
+            //action.payload have the bugs we recieved from the server
+             bugs.list =  action.payload
+        }
+
+>index.js
+
+store.dispatch(actions.apiCallBegan({
+        url:"/bugs",
+        onSuccess : 'bugs/bugRecieved'
+}))
+
+this is too much information for ui , we need something like this 
+
+store.dispatch(loadBugs())
+
+now we need to create a action creator named loadBugs
+
+>Bug.js
+//create an action Creator
+
+const url = "/bugs"
+
+export const loadBugs = ()=>{
+    
+    apiCallBegan({
+        url,
+        onSuccess : bugRecieved.type
+})
+
+}
+
+>index.js 
+
+store.dispatch(loadBugs())
+
+//Loading Indicator
+
+1.) create an action Bugsrequested
+2.) reducer : loading = true
+3.) middleware : dipatch this action before callin api
+
+=> creatig an reducer bugRecieved 
+
+ bugsRequested:(bugs,action)=>{
+    //when i request data , it start loading
+            bugs.loading = true;
+ }
+
+  bugRecieved:(bugs,action)=>{
+             bugs.list =  action.payload
+
+  //when it recieved bugs , it stop loading           
+             bugs.loading = false
+        },
+
+// now we need to pass our bugRecieved action to middleware before it call api    
+
+export const loadBugs = ()=> apiCallBegan({
+        url,
+        onStart: bugsRequested.type,
+        onSuccess : bugRecieved.type
+})
+
+> api.js middleware
+
+
+    const {url , method , data , onSuccess , onError , onStart} = action.payload
+
+// creating a new action if request failed    
+
+  bugsRequestedFailed:(bugs , action)=>{
+            bugs.loading = false;
+        }
+
+  export const loadBugs = ()=> apiCallBegan({
+        url,
+        onStart: bugsRequested.type,
+        onSuccess : bugRecieved.type,
+        onError : bugsRequestedFailed
+})
+      
+//Caching
+
+we add lastFetch property to bug slice
+
+now when you recieved bugs , save current time to lastFetch
+
+  bugRecieved:(bugs,action)=>{
+            //action.payload have the bugs we recieved from the server
+             bugs.list =  action.payload
+             bugs.loading = false
+             bugs.lastFetch = new Date.now()
+        },
+
+//if time stamp between first request and second request is greater than 10  in then we call the request the data othrhwise not
+
+=> hence change loadBugs
+
+//i am using moment library
+
+const url = "/bugs"
+
+export const loadBugs = () => (dispatch , getState) => {
+    const {lastFetch} = getState().entites.bugs;
+
+    //when we call moment we get the current date time
+ const diffInMinutes =   moment().diff(moment(lastFetch) ,'minutes') //it find differce between current time and last time
+
+ if(diffInMinutes < 10) return
+
+    dispatch(apiCallBegan({
+        url,
+        onStart: bugsRequested.type,
+        onSuccess : bugRecieved.type,
+        onError : bugsRequestedFailed.type
+}))
+   
+}
+
+//Saving data to server
+
+steps to follow 
+
+1.) Make an api call
+2.) Peomise resolved  => dispactch(success)
+3.) Promise rejected => dispactch(error)
+
+=> create a new action creator in bug slice
+
+export const addBug = bug => apiCallBegan({
+    url,
+    method: 'POST',
+    data:bug,
+    onSuccess : bugAdded.type
+})
+
+=> adding a bug in index.js
+
+store.dispatch(addBug({description:"!"}))
+
+=> i also change bugAdded action in bug Slice
+
+  bugAdded : (bugs , action) => {
+            bugs.list.push(
+                action.payload
+            )
+        },
+
+//Exercise to do 
+
+Saving the data when 
+- Assigning a bug to user
+- Resolving a Bug        
+
+- we need to create 2 actionCreator
+
+commond - event
+addBug - bugAdded
+
+1.)resolving a bug
+export const resolvedBug = id => apiCallBegan({
+    // Patch => to update one or more properties
+    url:url+'/'+id,
+    method:'patch',
+    data:{resolved : true},
+    onSuccess : bugResolved.type
+})
+
+> index.js
+store.dispatch(resolvedBug(1))
+
+2.) Bug Assigning to user
+
+export const assignBugToUser = (bugId , userId) => apiCallBegan({
+    url : url + '/' + bugId,
+    method:'patch',
+    data : {userId},
+    onSuccess : bugAssignedToUser.type
+})
+
+>index.js
+
+store.dispatch(assignBugToUser(1,4))
+
+/// Reducing Coupling
+
+take an example , we have a remote , we use remote using external button ,, and we do not care about remote internal and if a new remote cam e with a new tech , we use it using the same way we use it on older tech .
+
+so this thing need to be follow in software world
+
+means in redux appplication , we do not need to add bugAdded like action in our UI , we need to import addBug which use bugAdded action and save added bug in server
+
+suppose iff we use bugAdded in our ui , it only add bug but not save it 
+
+but if we use addBug , it add bug as well as save it
+
+hence never export event action from slice , only expoert commond action from slice
+
+now another module cannot use internal of bug module
+
+//Cohesion 
+
+we make all events action , commond cohesion , reducer , slice in one module  ,we can create it in multiple files but it increases coupling , hence it is a better practise to make it in one module
+
+
+
+//// Testing Redux application
+
+=> Automated testing
+means writing code to test our code 
+
+we can run thousands of tests in seconds and check if you have accidentally broken something
+
+there are 3 types of tests
+
+1.) Unit tests => testing the application without its external dependencies such as files , databse etc 
+suppose we have database and but when we test we make a mock object , on which i can test my app , by this we cna done our test in few sec
+
+we need most of our test in this category so they can run fast
+
+2.) Integration tests => for some test we need to use external ddependencies , hence we use this test , slower than unit test but give more confidence about our application
+3.) End to end Tests => in this we launch our application and drive through its ui , most fragile and slowest test , a simple ui change can break several end to end test
+
+but we focus on unit more
+
+//setting up testing enviornment
+
+> npm i jest @types/jest @babel/core @babel/preset-env babel-jest -D
+
+in root folder , create  a file name babel.config.json
+
+inside it i will tell babel , what plugins of it i used here
+
+>babel.config.json
+
+{
+    "presets": ["@babel/preset-env"]
+}
+
+inside src folder i create math.spec.js (it means it is a test file of math module)
+
+>math.spec.js
+
+it => use to define a test
+
+//first arg => name of test 
+//second arg => a test function 
+it("first test" , ()=>{
+    
+})
+
+>package.json
+
+  "scripts": {
+    "start": "webpack-dev-server --config ./webpack.config.js",
+    "test": "jest" 
+
+    or 
+
+  "test": "jest --watch" => every time we modify code it run the test ,  good for develpoemnt phase
+
+  },
+
+>terminal 
+npm test
+
+// First UNit test
+
+we create a module name math.js
+
+>math.js
+
+export const isEven = number => number % 2 === 0
+
+>>math.spec.js
+
+import { isEven } from "./math";
+
+it("is Even Should return true if given an even number" , ()=>{
+    //Function under test
+
+    const result = isEven(2);
+
+    //expect => to tell what result should come
+    //toEqual => checker => it can like greater than or not , or defined or undefined
+    expect(result).toEqual(true)
+})
+
+it("is Even Should return false if given an odd number" , ()=>{
+
+    const result = isEven(1);
+
+ 
+    expect(result).toEqual(false)
+})
+
+// group 
+
+// we can also define group using describe()
+describe("isEven",()=>{
+    it("Should return true if given an even number" , ()=>{
+       
+    
+        const result = isEven(2);
+    
+        expect(result).toEqual(true)
+    })
+    
+    it(" Should return false if given an odd number" , ()=>{
+    
+        const result = isEven(1);
+    
+     
+        expect(result).toEqual(false)
+    })
+})
+
+//Unit testing our redux application
+
+1.) Solitary tests (lonely test)
+
+we write seperate tests for action , reducers , middleware
+
+> poor technique for unit test
+
+> something we got into error where we do not understand that is our code wrong or test working
+
+> which decrease our productivity and slow us down
+
+because it test implementation not behaviour of our aplication , 
+means suppose we have a timer , we start the timer and it works properly but then a new tech came and we change the tech of timer 
+
+now if our unit test checks implementation  => it fails 
+and if our unit test checks working or behaviour => it pass
+
+> they are not reliable
+
+2.) Social tests 
+
+> less fragile
+> cheaper to write
+> cheaper to maintain 
+> more reliable
+
+//Solitary tests
+
+>bug.js => in thi s we have a action called addBug , which call api
+
+- to test it , we have to call it and look at object he returned , then we also have an miidlware which takes this object then it make an api call and upon success , it dipatch another action that is bugadded then we have reducer which take it and update the store
+
+> we have 3 building blocks 
+
+>make a folder called tests inside src folder
+
+> create a file name bugs.spec.js 
+
+>bugs.spec.js
+
+
+import {addBug , bugAdded} from "../bugs"
+import {apiCallBegan} from "../api"
+
+
+describe("bugsSlice" , ()=>{
+    describe("action Creators" , ()=>{
+        it("addBug" , ()=>{
+         const bug =  {description : 'a'}  
+         const result =   addBug(bug)
+         const expected = {
+            type : apiCallBegan.type,
+            payload:{
+                url : '/bugs',
+                method:'POST',
+                data:bug,
+                onSuccess : bugAdded.type
+            }
+         }
+         expect(result).toEqual(expected)
+        })
+        //suppose if we remove api middlware from confiStore , our test show it is working but in real world it is not working
+
+        //so we add one more test for config store
+
+        //now it is very bad , because it knows all the building block and the structure of our application
+
+        //if we change our implementation tommorow , our test fails 
+
+        //our bug.js is dispatching an action to call api  , onSuccess of this apic calling , a new action dispatch for adding bugs and suppose we change this to calling api directly and dispatching action of bugAdding => we got the same result(behaviour same) , but our solitary test fails because implementation changes
+
+    })
+})
+
+//Social Test
+
+npm i @babel/plugin-transform-runtime -D
+>babel.config.json
+{
+    "presets": ["@babel/preset-env"],
+    "plugins": ["@babel/plugin-transform-runtime"],
+}
+
+>bugs.spec.js
+
+import {addBug} from "../bugs"
+import configureStore from "../conigureStore"
+
+describe("bugsSlice" , () => {
+    it("shoul handle that add Bug action", async()=>{
+        // here we dispatch add Bug action and check our store thats it. no implementation checking
+      const store = configureStore()
+      const bug = {description  :'a'}
+      await store.dispatch(addBug(bug))
+      
+      expect(store.getState().entites.bugs.list).toHaveLength(1)
+
+    //   console.log(store.getState())
+
+
+    //   console.log(store.getState())
+      // we do not get anything here because to add ug we need some time because it takes sometime
+      //after applying async and await , we get x as undefined because in middleware we have order like logger > toast > api   
+      // looger > toast  > api , here we get some Promise from api , but it sticks in this middleware chain , we need to paas api Promise return to toast then logger , then we get this Promise outside chain 
+      //How to do it?
+      // apply return in front of next(action) 
+
+    })
+})
+
+//mocking http calls
+
+=> unit test should not call external library , there are 2 reasons for this 
+
+1.) slow down the test
+2.) sometime external library not available
+
+in the last case if i stop my backend , then my last social test fails
+
+//so we need to create axios object , hence we need to install npm i axios-mock-adapter -D
+
+>bugs.spec.js
+
+import {addBug} from "../bugs"
+import configureStore from "../conigureStore"
+import MockAdapter from 'axios-mock-adapter'
+import axios from 'axios'
+
+describe("bugsSlice" , () => {
+    it("shoul handle that add Bug action", async()=>{
+        const bug = {description  :'a'}
+        const savedBug = {...bug , id : 1}
+        //creating fake axios 
+        const fakeAxios = new MockAdapter(axios)
+
+        //i need to tell him whenever a post request happen , respond with this object
+
+        fakeAxios.onPost('/bugs').reply(200 , savedBug)
+      
+      const store = configureStore()
+     
+      await store.dispatch(addBug(bug))
+      
+      expect(store.getState().entites.bugs.list).toContainEqual(savedBug)
+
+    })
+})
+
+//Writing clean Test
+
+import {addBug} from "../bugs"
+import configureStore from "../conigureStore"
+import MockAdapter from 'axios-mock-adapter'
+import axios from 'axios'
+
+describe("bugsSlice" , () => {
+
+    //common thing that every test require 
+    let fakeAxios;
+    let store;
+
+    //beforeEach function execute before each test
+    beforeEach(() => {
+         fakeAxios = new MockAdapter(axios)
+         store = configureStore()
+    })
+
+    //helper function 
+    const bugsSlice = () => store.getState().entites.bugs
+
+    it("should add the bug to store if it is saved to the server", async()=>{
+
+        // we use 
+        //Arrange => contain all initialization code
+
+        const bug = {description  :'a'}
+        const savedBug = {...bug , id : 1}
+        fakeAxios.onPost('/bugs').reply(200 , savedBug)
+
+        //Act => code for triggering an action
+        await store.dispatch(addBug(bug))
+
+        //Assert => contains expectation code
+        expect(bugsSlice().list).toContainEqual(savedBug)
+
+    
+    })
+
+    it("should not add the bug to store if it is not saved to the server", async()=>{
+
+        // we use 
+        //Arrange => contain all initialization code
+
+        const bug = {description  :'a'}
+        fakeAxios.onPost('/bugs').reply(500)
+
+        //Act => code for triggering an action
+        await store.dispatch(addBug(bug))
+
+        //Assert => contains expectation code
+        expect(bugsSlice().list).toHaveLength(0)
+
+    
+    })
+})
+
+//Test Coverage
+
+we need to know what part of our code tested and what part is not
+
+=> jest --coverage 
+
+=> we got a new folder coverage > Icov-report > index.html (open this in browser)
+
+//Exercise 
+
+write test for 
+
+- resolving a bug
+- loading bugs 
+- getting unresolved bugs 
+
+1.) getting unresolved bugs 
+
+ describe("selectors" , ()=>{
+
+        it("getUnresolvedBugs" ,()=>{
+      //Arrange      
+      const state = createState()
+      state.entites.bugs.list =  [{id:1 , resolved : true},{id:2},{id:3},]
+
+      //Act
+      const result =  getunresolvedBugs(
+          state
+       )
+       
+      //Assert
+       expect(result).toHaveLength(2)
+
+        })
+    })
+
+2.) resolving a bug    
+
+it("should mark the bug resolved if it is saved to server" ,async()=>{
+
+     //Arrange
+     const bug = {description  :'a' , id:1 }
+     const savedBug = {...bug,resolved : true}
+     fakeAxios.onPatch('/bugs/1').reply(200,savedBug)
+     fakeAxios.onPost('bugs').reply(200 , {id:1})
+     //Act
+
+     //we need to add id : 1 to the bug because initially it is empty array 
+     await store.dispatch(addBug({id:1}))
+     await store.dispatch(resolvedBug(1))
+
+     //Assert
+     expect(bugsSlice().list[0].resolved).toBe(true)
+
+    })
+
+ it("should not mark the bug resolved if it is not saved to server" ,async()=>{
+
+     //Arrange
+     const bug = {description  :'a' , id:1 }
+     
+     fakeAxios.onPatch('/bugs/1').reply(500)
+     fakeAxios.onPost('bugs').reply(200 , {id:1})
+     //Act
+
+     //we need to add id : 1 to the bug because initially it is empty array 
+     await store.dispatch(addBug({id:1}))
+     await store.dispatch(resolvedBug(1))
+
+     //Assert
+     expect(bugsSlice().list[0].resolved).not.toBe(true)
+
+    })
+
+3.) loadingBugs    
+
+-loading Bugs 
+  - if they exists in the cache
+   * they should come from the cache
+
+  - if they do not exist in the cache
+   * they should be fetched from the server
+     -loading Indicator 
+      * should be true while fetching 
+      * should be false after Bugs are fetched
+      * should be false if the server fails  
+
+describe('loadingBugs',()=>{
+        describe("if the bugs exists in the cache",()=>{
+            it("should come from the cache or should not be coem from server" , async() => {
+                fakeAxios.onGet("/bugs").reply(200 , [{
+                    id:1,
+                }])
+
+            // to check it we need to dispatch the request twice   
+              await store.dispatch(loadBugs())
+              await store.dispatch(loadBugs())
+
+            // fakeAxios.history.get => returns a array  
+              expect(fakeAxios.history.get.length).toBe(1)
+            })
+        })
+        describe("if the bugs do not exists in the cache",()=>{
+
+          it("should be fetched from the server",async()=>{
+            fakeAxios.onGet("/bugs").reply(200 ,[{id:1,}])
+
+            await store.dispatch(loadBugs())
+
+            expect(bugsSlice().list).toHaveLength(1)
+          })
+
+            describe("loading indicator",()=>{
+                it("should be true while fetching",()=>{
+                //    fakeAxios.onGet('/bugs').reply(200,[{id:1}])  
+                   fakeAxios.onGet('/bugs').reply(()=>{
+                    //With the help of this code we can run code before callng api
+
+                    //means loading should be true if we are waiting for request
+                   expect(bugsSlice().loading).toBe(true); 
+                  
+
+                    return [200,[{id:1}]]
+                   })  
+
+                 store.dispatch(loadBugs())
+
+
+                })
+
+                it("should be false after Bugs are fetched",async()=>{
+                   fakeAxios.onGet('/bugs').reply(200,[{id:1}])  
+               
+
+                   await store.dispatch(loadBugs())
+
+                   expect(bugsSlice().loading).toBe(false)
+
+                })
+                it("should be false if the server fails",async()=>{
+                   fakeAxios.onGet('/bugs').reply(500)  
+
+                   await store.dispatch(loadBugs())
+
+                   expect(bugsSlice().loading).toBe(false)
+
+                })
+            })
+
+///Integration with React    
+
+i create a new workspace called react-redux
+
+npx create-react-app bugs-frontend
+
+npm start
+
+> Installing the redux
+
+npm i redux @redux/toolkit axios moment
+
+add store into our react project 
+
+>Providing the store
+
+add our store folder into src of react-redux 
+
+>here i create a component called Bugs.js
+
+>App.js
+
+
+import './App.css';
+import Bugs from './components/Bugs';
+import configureStore from './store/conigureStore'
+import { Provider } from 'react-redux'
+
+//Creating a store
+
+const store = configureStore();
+
+function App() {
+  return (
+    //now with the help of value every components inside this wrapper , get access to store
+    <Provider store={store}>
+      <Bugs/>
+    </Provider>
+
+//this is a bad practise because now we need to pass this to every component using props , due to which prop drilling happened , hence we use CntextAPI
+    //  {/* <Bugs store = {store} /> */}
+  );
+}
+
+export default App;
+
+>Bug.js
+
+import React, { useEffect } from "react";
+import { getunresolvedBugs, loadBugs } from "../store/bugs";
+import { useDispatch, useSelector } from "react-redux";
+
+
+export default function Bugs(props) {
+
+    const dispatch = useDispatch();
+    const bugs = useSelector(getunresolvedBugs);
+  
+    useEffect(()=>{
+       dispatch(loadBugs())
+    },[])
+
+  return (
+    <ul>
+      {
+        bugs.map((bug)=>(
+            <li key={bug.id}>{bug.description}</li>
+        ))
+      }
+    </ul>
+  );
+}
+
+for testing add 2 files 1 is babel.config.js and jest.config.js 
+
+npm i jest ts-jest babel-jest
+
+> babel.config.js
+module.exports = {presets: ['@babel/preset-env']}
+
+> jest.config.js
+module.exports = {
+    preset: 'ts-jest',
+    transform: {
+      '^.+\\.(ts|tsx)?$': 'ts-jest',
+      "^.+\\.(js|jsx)$": "babel-jest",
+    }
+  };

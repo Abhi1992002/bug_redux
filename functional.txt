@@ -1,0 +1,278 @@
+// functional programming
+
+Javascript function are first class citizens , which means we can treat them just likE any other variable
+
+-> we can assign then to a variable
+-> we can pass them as an argument
+-> can return them from other function
+
+example => function sayHello() {
+    return function(){
+        return "hello world"
+    }
+}
+
+Higher Order Functions => function that takes a function as an argument 
+
+eg :> setTimeout(()=> console.log("hello"),1000);
+      setTimeout is a higher order function because it take function as a argument
+
+Function  Composition => writing small chunks of code to solve a big real life problem
+
+-> eg-> let input = "   Javascript    "
+        let output = "<div>" + input.trim() + "</div>"
+
+// Now solve this using functional programming
+
+step-1 => trim
+const trim = str => str.trim()
+
+step-2 => wrap it inside div
+const wrap => str => `<div>${str}</div>`
+
+step-3 => to lower case
+const toLowerCase = str => str.toLowerCase()
+
+wrap(toLowerCase(trim(input))) => here lots of paranthesis came if there are more function then it may become more complicating hence we use 
+
+composing and pipes
+we use lodash => a javascript library , use to solve complex functional Composition
+
+1.) npm i lodash
+2.) import { compose , pipe } from 'lodash/fp'
+3.) const transform = compose(wrap , toLowerCase , trim
+    it is also a higher order function and it returns a function which is conposition of all these of function 
+4.) transform(input))
+5.) pipe(trim , toLowerCase , wrap) 
+    same work as compose , difference is compose do right to left and pipe left to right
+    we can't send a string to pipe
+    it is commonly more used
+
+
+// Currying => it is technique to wripe clean javascript code
+
+eg => function add(a,b){
+      return a + b;
+}
+
+add(2,3)
+
+// Currying method
+function add(a){
+    return function(b){
+        a+b
+    }
+}
+
+or
+
+function add = a => b => a+b;
+
+add(2)(3)
+
+
+
+<------------------------>
+
+eg => const trim = str => str.trim()
+
+      const wrapdiv => str => `<div>${str}</div>`
+      const wrapspan => str => `<span>${str}</span>`
+      // above two are repetitive , we should make them reusable
+
+      const wrap => type => str => `<${type}>${str}</${type}>`
+
+      const toLowerCase = str => str.toLowerCase()
+
+     const transform =  pipe(trim , toLowerCase , wrap("div")) 
+
+
+// Pure Function
+
+     function is called a pure function if we give same argument evertime it give me same result evertime
+
+     in pure function
+     => on random values
+     => no current date/time
+     => no global state (DOM,files,db)
+     => no mutation of parameters ?? => means you can't change it
+
+in redux , we have a function called reducer , we need to assure that they are pure , other function can be impure
+
+eg => // impure
+function isEligible(age){
+    return age > minAge
+}
+
+// here result depends upon global variable minAge
+
+// pure
+function isEligible(age , minAge){
+    return age > minAge
+}
+
+benefits
+1.) self documenting => whatever it need it specified in arguments
+2.)easily testable
+3.) concurrency => we can run all these pure function parallelly because they do not have any variable outside function
+4.) cacheable => we know we got same result everytime so we can save result in cache
+
+//Immutability
+means once created , then cannt be changed => if you need to change , firstly copy it and then change it
+
+eg => string on javascript sre immutable 
+       let name ="Mosh"
+       let newNmae = name.toUpperCase(); // new striing is created  , no effect on name string\
+
+       but this case is not with object (not immutable) hence javascript is not complete functional programming becaus it is not complete immutable
+   
+       const book = {}
+       book.title= "..." //change book
+
+       there is a misconception that if we create something with const  is immutate , with const we cant assign a new object but you can change that object
+
+// Benefits of immutablilty
+1.) Predictable
+2.) faster change detection (mainly used in react and redux) => evertime new changes came it makes a new object and if react check the changes , he see a new object made frm thsi object then a change occur , otherwise to see change he need to complete object 
+3.) concurrency
+
+//should we always favour immutablity?
+1.) performance decreases (because new object created)
+2.) memory overhead => there are some immutibilty library to solve this like structural sharing , if some value are common between 2 objects then they are not copied accroess , they are shared
+
+hence , if you use redux , you should not mutate data (beacuse depend on functional programming) , outside it you can use it
+
+
+//Updating objects
+=> take care of immutability and update the object
+
+const person = {name: "John"}
+
+1st way 
+const updated = Object.assign({} , person ,{name:"bob , age:90}) => this copy person object properties into first empty object and third argument is updates
+
+2nd method => more preferable
+
+const updated = {...person , name:"bob" , age:90}
+
+spread operate do shallow copy means there may be problem in nested object
+
+
+const person = {name: "John" , address:{country:"USA",city:"San francisco"}}
+
+const updated = {...person , name:"bob" , age:90}
+
+updated.address.country = "India" => if we do this our person object also changed , to solve we used deep copy
+
+const updated = {...person ,
+                 address:{
+                    ...person.address,
+                    hello:"no"
+                 },
+                name:"bob" , age:90}
+
+// as more nested object came , it become more complex thats why we have immutablity library
+
+
+//Updating Array
+
+const number =[1,23,32]
+
+//adding
+const added = [23, ...number , 23]
+
+// if i want to add at a particular index
+const index = number.indexOf(23)
+const added = [...number.slice(0,index),4,...number.slice(index)] => //this add number before 23
+
+//removing
+const removed = number.filter(n => n!==23) => have element except 23 
+
+//Updating
+const updated =  numbers.map(n => n===23 ? 20 : n) => replac 23 with 20
+
+
+//Enforcing immutability
+to enforce immutabilty we use libraries like immutable(facebook) , immer(mob x) => best , mori
+
+//immutable library
+
+1.) npm i immutable
+
+import {Map} from "immutable"
+
+// not immutable way
+let book = {title:"harry potter}
+function publish(book){
+    book.isPublished =true;
+}
+publish(book)
+consoel.log(book.title)
+
+//immutable way
+let book = Map({title:"harry potter})
+function publish(book){
+ return   book.set("isPublished",true)
+}
+
+book = publish(book)
+
+consle.log(book.get("title")) // give value
+consle.log(book.toJS("title")) // give ke-value
+
+//Immer library
+
+1.) npm i immer
+import {produce} from 'immer'
+let book = {title:"harry potter}
+function publish(book){
+ return  produce( book, draftBook => {
+    draftBook.isPublished = true;
+   })
+   // here book is initial state , draftBook is used to make changes to it
+   //better than using spres operator
+}
+let updated = publish(book)
+consoel.log(updated.title)
+
+always use spread operated if object is not nested
+
+const {pipe} = require("lodash/fp")
+
+//Exercise 1
+
+// take tag outside obj
+// lowercase
+// addbracket
+
+
+const tag = (obj) => obj.tag 
+const lowercase = (tag) => tag.toLowerCase()
+const addbracket = (lowercase) => `(${lowercase})`
+
+const transform = pipe(tag , lowercase , addbracket)
+
+console.log(transform({tag:"JAVASCRIPT"}))
+
+//Exercise 2
+
+
+
+const recipe = { name:"Spaghetti Bolognese",
+                  ingredients: ["eggs","salt"] }
+
+ // add (incredient) cream to it 
+ const addincredient = {...recipe ,ingredients:[...recipe.ingredients , "cream"]}  
+
+ console.log(addincredient)
+ 
+ // replace egg with egg white
+ const replaceegg = {...addincredient , ingredients : recipe.ingredients.map(ingredient => ingredient === "eggs" ? "egg ehite" : ingredient)}
+
+console.log(replaceegg)
+
+//remove egg
+
+const removeegg = {...recipe , ingredients: recipe.ingredients.filter(ingredient => ingredient !== "eggs")}
+
+console.log(removeegg)
